@@ -1,0 +1,160 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 95%;
+    max-width: 650px;
+    margin-bottom: 20px;
+}
+
+h1, h2 {
+    color: #1a237e; /* Dark blue */
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.menu-items, .topping-items, .cart-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.menu-item, .topping-item {
+    flex-basis: calc(50% - 15px); /* Two items per row */
+}
+
+.menu-item button, .topping-item button, .action-button, .cart-button {
+    background-color: #3949ab; /* Indigo */
+    color: white;
+    border: none;
+    padding: 14px 22px;
+    text-align: center;
+    text-decoration: none;
+    display: block; /* Make buttons take full width of their container */
+    width: 100%;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.menu-item button:hover, .topping-item button:hover, .action-button:hover, .cart-button:hover {
+    background-color: #283593; /* Darker Indigo */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.topping-item button.selected {
+    background-color: #1e88e5; /* Blue for selected toppings */
+    color: white;
+}
+.topping-item button.selected:hover {
+    background-color: #1565c0; /* Darker Blue */
+}
+
+
+.cart-button.secondary {
+    background-color: #546e7a; /* Blue Grey */
+}
+.cart-button.secondary:hover {
+    background-color: #455a64; /* Darker Blue Grey */
+}
+
+.cart-button.danger {
+    background-color: #d32f2f; /* Red */
+}
+.cart-button.danger:hover {
+    background-color: #c62828; /* Darker Red */
+}
+
+#cart-summary {
+    margin-top: 20px;
+    border-top: 2px solid #e0e0e0;
+    padding-top: 20px;
+}
+
+#cart-items-list {
+    list-style: none;
+    padding: 0;
+}
+
+#cart-items-list li {
+    background-color: #f9f9fa;
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#cart-items-list li .item-details {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+#cart-items-list li .item-toppings {
+    font-size: 0.9em;
+    color: #555;
+    margin-left: 0; /* Adjusted for flex-wrap */
+    flex-basis: 100%; /* Take full width on new line if needed */
+    margin-top: 5px;
+}
+
+#total-info {
+    margin-top: 25px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-align: right;
+    color: #1a237e;
+}
+#total-info p {
+    margin: 8px 0;
+}
+
+.current-item-info {
+    text-align: center;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: #283593;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e8eaf6; /* Light Indigo background */
+    border-radius: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .menu-item, .topping-item {
+        flex-basis: 100%; /* Full width for smaller screens */
+    }
+    .container {
+        padding: 20px 15px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+    .menu-item button, .topping-item button, .action-button, .cart-button {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+}
