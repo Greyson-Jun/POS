@@ -9,10 +9,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>Order History</h1>
+        <h1><i class="fa-solid fa-clock-rotate-left"></i>Order History</h1>
          <p style="text-align: center; font-size: 0.9em; color: #555; margin-top: -15px; margin-bottom: 20px;">
             This history is stored in your browser. It shows individual items sorted by order time.
         </p>
+
+        <input type="text" id="history-search" placeholder="Search by item or topping..." onkeyup="filterHistoryTable()">
+
         <div style="overflow-x:auto;"> <table class="history-table">
                 <thead>
                     <tr>
@@ -25,15 +28,16 @@
                     </tr>
                 </thead>
                 <tbody id="history-table-body">
-                    <tr>
-                        <td colspan="6" style="text-align:center;">Loading history...</td>
-                    </tr>
-                </tbody>
+                    </tbody>
             </table>
         </div>
         <div class="cart-actions" style="margin-top: 25px;">
-             <button class="cart-button secondary" onclick="window.location.href='index.html'">Back to Menu</button>
-             <button class="cart-button danger" onclick="clearHistory()">Clear History</button>
+             <button class="cart-button secondary" onclick="window.location.href='index.html'">
+                <i class="fa-solid fa-house"></i>Back to Menu
+            </button>
+             <button class="cart-button danger" onclick="clearHistory()">
+                <i class="fa-solid fa-trash-can"></i>Clear History
+            </button>
         </div>
     </div>
 
