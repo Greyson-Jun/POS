@@ -4,7 +4,8 @@ const MENU_ITEMS = {
     "Chicago Dog": 5.50,
     "Chilly Dog": 4.00,
     "Italian Beef": 7.00,
-    "Polish Sausage": 7.00
+    "Polish Sausage": 7.00,
+    "Cheesesteak": 10.00
 };
 
 const TOPPINGS_LIST = ["Sauerkraut", "Onion", "Fried Onion", "Relish", "Pepper"];
