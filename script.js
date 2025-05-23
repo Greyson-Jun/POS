@@ -8,15 +8,18 @@ const MENU_ITEMS = {
 };
 
 const TOPPINGS_LIST = ["Sauerkraut", "Onion", "Fried Onion", "Relish", "Pepper"];
+const COMBO_PRICE = 2.00;
 
 const LS_KEYS = {
-    CART: 'posCartV3',
-    CURRENT_ITEM: 'posCurrentItemV3',
+    CART: 'posCartV4',
+    CURRENT_ITEM: 'posCurrentItemV4',
+    HISTORY: 'posHistoryV4',
     LS_AVAILABLE_CHECK: 'posLsCheck'
 };
 
 let cart = [];
 let currentItem = null;
+let history = [];
 let lsAvailable = false;
 
 // --- LOCALSTORAGE HELPER FUNCTIONS ---
@@ -29,97 +32,70 @@ function isLocalStorageAvailable() {
         return false;
     }
 }
-
-function getLocalStorageItem(key) {
+function getLocalStorageItem(key) { /* ... (same as previous version) ... */ 
     if (!lsAvailable) return null;
     try {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;
-    } catch (e) {
-        console.error(`Error getting item ${key} from localStorage:`, e);
-        return null;
-    }
+    } catch (e) { console.error(`LS get error: ${key}`, e); return null; }
 }
-
-function setLocalStorageItem(key, value) {
+function setLocalStorageItem(key, value) { /* ... (same as previous version) ... */
     if (!lsAvailable) return;
     try {
         localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-        console.error(`Error setting item ${key} in localStorage:`, e);
-        showToast('Could not save data. Storage might be full.', 'error');
-    }
+    } catch (e) { console.error(`LS set error: ${key}`, e); showToast('Could not save data.', 'error'); }
+}
+function removeLocalStorageItem(key) { /* ... (same as previous version) ... */
+    if (!lsAvailable) return;
+    try { localStorage.removeItem(key); } catch (e) { console.error(`LS remove error: ${key}`, e); }
 }
 
-function removeLocalStorageItem(key) {
-    if (!lsAvailable) return;
-    try {
-        localStorage.removeItem(key);
-    } catch (e) {
-        console.error(`Error removing item ${key} from localStorage:`, e);
-    }
-}
 
 // --- TOAST NOTIFICATION ---
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(message, type = 'info', duration = 3000) { /* ... (same as previous version) ... */
     const container = document.getElementById('toast-container');
     if (!container) return;
-
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
-    
     const messageSpan = document.createElement('span');
     messageSpan.textContent = message;
     toast.appendChild(messageSpan);
-
     const closeButton = document.createElement('button');
     closeButton.className = 'toast-close-btn';
     closeButton.innerHTML = '&times;';
     closeButton.setAttribute('aria-label', 'Close notification');
-    closeButton.onclick = () => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300); // Allow fade out
-    };
+    closeButton.onclick = () => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); };
     toast.appendChild(closeButton);
-
     container.appendChild(toast);
-    
-    // Trigger reflow for transition
-    requestAnimationFrame(() => {
-      toast.classList.add('show');
-    });
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
+    requestAnimationFrame(() => { toast.classList.add('show'); });
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, duration);
 }
 
+// --- DATE/TIME FORMATTING ---
+function formatDateTime(date) {
+    const d = new Date(date);
+    return {
+        date: d.toLocaleDateString(),
+        time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+}
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     lsAvailable = isLocalStorageAvailable();
-    if (!lsAvailable) {
-        showToast('LocalStorage is not available. Changes will not be saved.', 'warning', 5000);
-    }
+    if (!lsAvailable) { showToast('LocalStorage not available. Changes will not be saved.', 'warning', 5000); }
 
     cart = getLocalStorageItem(LS_KEYS.CART) || [];
     currentItem = getLocalStorageItem(LS_KEYS.CURRENT_ITEM);
+    history = getLocalStorageItem(LS_KEYS.HISTORY) || [];
 
     const page = window.location.pathname.split("/").pop() || 'index.html';
 
-    if (page === 'index.html') {
-        // When on menu page, clear current item unless it's explicitly kept for an edit flow (not implemented here yet as such)
-        // For now, this selectMenuItem will always create a new one.
-        // removeLocalStorageItem(LS_KEYS.CURRENT_ITEM);
-        // currentItem = null; // This would prevent editing if user navigates index->cart->edit->index
-        loadMenuItems();
-    } else if (page === 'toppings.html') {
-        loadToppingsPage();
-    } else if (page === 'cart.html') {
-        loadCartPage();
-    }
+    if (page === 'index.html') { loadMenuItems(); } 
+    else if (page === 'toppings.html') { loadToppingsPage(); } 
+    else if (page === 'cart.html') { loadCartPage(); }
+    else if (page === 'history.html') { loadHistoryPage(); }
 });
 
 // --- MENU PAGE (index.html) ---
@@ -127,7 +103,6 @@ function loadMenuItems() {
     const menuContainer = document.getElementById('menu-items-container');
     if (!menuContainer) return;
     menuContainer.innerHTML = '';
-
     for (const itemName in MENU_ITEMS) {
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('menu-item');
@@ -141,10 +116,12 @@ function loadMenuItems() {
 
 function selectMenuItem(name, price) {
     currentItem = {
-        id: Date.now(), // Fresh ID for a new selection
+        id: Date.now(),
         name: name,
-        price: price,
-        toppings: []
+        price: price, // Initial price
+        originalPrice: price, // Store original for combo toggle
+        toppings: [],
+        isCombo: false
     };
     setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
     window.location.href = 'toppings.html';
@@ -153,6 +130,7 @@ function selectMenuItem(name, price) {
 // --- TOPPINGS PAGE (toppings.html) ---
 function loadToppingsPage() {
     const toppingsContainer = document.getElementById('topping-items-container');
+    const comboContainer = document.getElementById('combo-container');
     const currentItemDisplay = document.getElementById('current-item-display');
 
     if (!currentItem || !currentItem.name) {
@@ -162,13 +140,27 @@ function loadToppingsPage() {
     }
 
     if (currentItemDisplay) {
-        currentItemDisplay.textContent = `Customizing: ${currentItem.name}`;
+        currentItemDisplay.textContent = `Customizing: ${currentItem.name} ($${currentItem.price.toFixed(2)})`;
+    }
+    
+    // Combo Button
+    if (comboContainer) {
+        comboContainer.innerHTML = '';
+        const comboDiv = document.createElement('div');
+        comboDiv.classList.add('topping-item');
+        const comboButton = document.createElement('button');
+        comboButton.textContent = `Add Combo +$${COMBO_PRICE.toFixed(2)}`;
+        comboButton.classList.add('combo-btn');
+        comboButton.setAttribute('aria-pressed', currentItem.isCombo ? 'true' : 'false');
+        comboButton.onclick = () => toggleCombo(comboButton);
+        comboDiv.appendChild(comboButton);
+        comboContainer.appendChild(comboDiv);
     }
 
+    // Topping Buttons
     if (!toppingsContainer) return;
     toppingsContainer.innerHTML = ''; 
-
-    TOPPINGS_LIST.forEach(toppingName => {
+    TOPPINGS_LIST.forEach(toppingName => { /* ... (same as previous version, but uses TOPPINGS_LIST) ... */ 
         const isSelected = currentItem.toppings.includes(toppingName);
         const toppingDiv = document.createElement('div');
         toppingDiv.classList.add('topping-item');
@@ -176,24 +168,40 @@ function loadToppingsPage() {
         button.textContent = toppingName;
         button.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
         if (isSelected) button.classList.add('selected');
-        
         button.onclick = () => toggleTopping(toppingName, button);
         toppingDiv.appendChild(button);
         toppingsContainer.appendChild(toppingDiv);
     });
 
+    // Add "All" button
     const allToppingsDiv = document.createElement('div');
     allToppingsDiv.classList.add('topping-item');
     const allButton = document.createElement('button');
-    const allSelected = currentItem.toppings.length === TOPPINGS_LIST.length && TOPPINGS_LIST.every(t => currentItem.toppings.includes(t));
     allButton.textContent = "Toggle All Toppings";
-    allButton.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
     allButton.onclick = () => toggleAllToppings();
-    allToppingsDiv.appendChild(allButton);
     toppingsContainer.appendChild(allToppingsDiv);
 }
 
-function toggleTopping(toppingName, buttonElement) {
+function toggleCombo(buttonElement) {
+    if (!currentItem) return;
+    currentItem.isCombo = !currentItem.isCombo;
+    if (currentItem.isCombo) {
+        currentItem.price = currentItem.originalPrice + COMBO_PRICE;
+        showToast('Combo Added!', 'success');
+    } else {
+        currentItem.price = currentItem.originalPrice;
+        showToast('Combo Removed.', 'info');
+    }
+    buttonElement.setAttribute('aria-pressed', currentItem.isCombo ? 'true' : 'false');
+    setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
+    // Update display price
+    const currentItemDisplay = document.getElementById('current-item-display');
+    if (currentItemDisplay) {
+        currentItemDisplay.textContent = `Customizing: ${currentItem.name} ($${currentItem.price.toFixed(2)})`;
+    }
+}
+
+function toggleTopping(toppingName, buttonElement) { /* ... (same as previous version) ... */
     if (!currentItem) return;
     const index = currentItem.toppings.indexOf(toppingName);
     let currentlyPressed;
@@ -208,36 +216,26 @@ function toggleTopping(toppingName, buttonElement) {
     }
     buttonElement.setAttribute('aria-pressed', currentlyPressed ? 'true' : 'false');
     setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
-    // Update "Toggle All Toppings" button's aria-pressed state
-    const allButton = document.querySelector('.topping-item button[onclick="toggleAllToppings()"]');
-    if(allButton){
-        const allSelected = currentItem.toppings.length === TOPPINGS_LIST.length && TOPPINGS_LIST.every(t => currentItem.toppings.includes(t));
-        allButton.setAttribute('aria-pressed', allSelected ? 'true' : 'false');
-    }
 }
 
-function toggleAllToppings() {
-    if (!currentItem) return;
+function toggleAllToppings() { /* ... (same as previous version) ... */
+     if (!currentItem) return;
     const allCurrentlySelected = currentItem.toppings.length === TOPPINGS_LIST.length && TOPPINGS_LIST.every(t => currentItem.toppings.includes(t));
-
-    if (allCurrentlySelected) {
-        currentItem.toppings = [];
-    } else {
-        currentItem.toppings = [...TOPPINGS_LIST];
-    }
+    if (allCurrentlySelected) { currentItem.toppings = []; } 
+    else { currentItem.toppings = [...TOPPINGS_LIST]; }
     setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
-    loadToppingsPage(); // Re-render buttons to show visual and ARIA state
+    loadToppingsPage();
 }
 
-function _saveCurrentItemToCart() {
+function _saveCurrentItemToCart() { /* ... (same as previous version, but adds toast) ... */
     if (currentItem && currentItem.name) {
         const existingItemIndex = cart.findIndex(item => item.id === currentItem.id);
-        if (existingItemIndex > -1) { // Item was being edited
-            cart[existingItemIndex] = { ...currentItem }; // Update existing item
-            showToast(`${currentItem.name} updated in cart.`, 'success');
-        } else { // New item
+        if (existingItemIndex > -1) {
+            cart[existingItemIndex] = { ...currentItem };
+            showToast(`${currentItem.name} updated.`, 'success');
+        } else {
             cart.push({ ...currentItem });
-            showToast(`${currentItem.name} added to cart.`, 'success');
+            showToast(`${currentItem.name} added.`, 'success');
         }
         setLocalStorageItem(LS_KEYS.CART, cart);
     }
@@ -245,110 +243,167 @@ function _saveCurrentItemToCart() {
     removeLocalStorageItem(LS_KEYS.CURRENT_ITEM);
 }
 
-function orderMore() {
-    _saveCurrentItemToCart();
-    window.location.href = 'index.html';
-}
-
-function viewCart() {
-    _saveCurrentItemToCart();
-    window.location.href = 'cart.html';
-}
+function orderMore() { _saveCurrentItemToCart(); window.location.href = 'index.html'; }
+function viewCart() { _saveCurrentItemToCart(); window.location.href = 'cart.html'; }
 
 // --- CART PAGE (cart.html) ---
 function loadCartPage() {
     const cartItemsList = document.getElementById('cart-items-list');
     const totalInfoDiv = document.getElementById('total-info');
-
     if (!cartItemsList || !totalInfoDiv) return;
     cartItemsList.innerHTML = ''; 
+    let totalAmount = 0;
 
     if (cart.length === 0) {
         cartItemsList.innerHTML = '<li>Your cart is currently empty.</li>';
-        totalInfoDiv.innerHTML = '<p>Total Menu Items: 0</p><p>Total Amount Due: $0.00</p>';
+        totalInfoDiv.innerHTML = '<p>Total Items: 0</p><p>Total Amount Due: $0.00</p>';
         return;
     }
 
-    let totalAmount = 0;
-    let totalItems = 0;
-
     cart.forEach(item => {
         const listItem = document.createElement('li');
-        
         const itemInfoDiv = document.createElement('div');
         itemInfoDiv.classList.add('item-info');
-
         const itemDetailsSpan = document.createElement('span');
         itemDetailsSpan.classList.add('item-details');
         itemDetailsSpan.textContent = `${item.name} - $${item.price.toFixed(2)}`;
         itemInfoDiv.appendChild(itemDetailsSpan);
-        
         const itemToppingsSpan = document.createElement('span');
         itemToppingsSpan.classList.add('item-toppings');
-        itemToppingsSpan.textContent = item.toppings && item.toppings.length > 0 
-            ? `Toppings: ${item.toppings.join(', ')}` 
-            : 'No toppings selected';
+        
+        let toppingsHTML = '';
+        if (item.isCombo) {
+            toppingsHTML += '<span class="combo-tag">Combo</span>';
+        }
+        const otherToppings = item.toppings.join(', ');
+        if(otherToppings) {
+            toppingsHTML += (item.isCombo ? ' ' : '') + `Toppings: ${otherToppings}`;
+        } else if (!item.isCombo) {
+             toppingsHTML = 'No toppings';
+        }
+
+        itemToppingsSpan.innerHTML = toppingsHTML;
         itemInfoDiv.appendChild(itemToppingsSpan);
         listItem.appendChild(itemInfoDiv);
-
+        
         const itemActionsDiv = document.createElement('div');
         itemActionsDiv.classList.add('item-actions');
-
         const editButton = document.createElement('button');
         editButton.textContent = 'Edit';
         editButton.classList.add('edit-btn');
         editButton.setAttribute('aria-label', `Edit ${item.name}`);
         editButton.onclick = () => editCartItem(item.id);
         itemActionsDiv.appendChild(editButton);
-
         const removeButton = document.createElement('button');
         removeButton.textContent = 'Remove';
         removeButton.classList.add('remove-btn');
         removeButton.setAttribute('aria-label', `Remove ${item.name} from cart`);
         removeButton.onclick = () => removeItemFromCart(item.id, item.name);
         itemActionsDiv.appendChild(removeButton);
-        
         listItem.appendChild(itemActionsDiv);
         cartItemsList.appendChild(listItem);
-
         totalAmount += item.price;
-        totalItems++;
     });
 
     totalInfoDiv.innerHTML = `
-        <p>Total Menu Items: ${totalItems}</p>
+        <p>Total Menu Items: ${cart.length}</p>
         <p>Total Amount Due: $${totalAmount.toFixed(2)}</p>
     `;
 }
 
-function editCartItem(itemId) {
+function editCartItem(itemId) { /* ... (same as previous version) ... */
     const itemToEdit = cart.find(item => item.id === itemId);
     if (itemToEdit) {
-        currentItem = { ...itemToEdit }; // Load item into currentItem
+        currentItem = { ...itemToEdit }; 
         setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
         window.location.href = 'toppings.html';
-    } else {
-        showToast('Error: Item not found for editing.', 'error');
-    }
+    } else { showToast('Error: Item not found.', 'error'); }
 }
 
-function removeItemFromCart(itemId, itemName) {
+function removeItemFromCart(itemId, itemName) { /* ... (same as previous version) ... */
     const initialLength = cart.length;
     cart = cart.filter(item => item.id !== itemId);
     if (cart.length < initialLength) {
         setLocalStorageItem(LS_KEYS.CART, cart);
-        loadCartPage(); // Refresh cart display
-        showToast(`${itemName || 'Item'} removed from cart.`, 'info');
+        loadCartPage();
+        showToast(`${itemName || 'Item'} removed.`, 'info');
     }
 }
 
-function resetCart() {
-    if (confirm("Are you sure you want to reset the entire cart? This cannot be undone.")) {
+function startNewOrder() {
+    if (cart.length === 0) {
+        showToast("Cart is empty. Nothing to save.", "warning");
+        return;
+    }
+
+    if (confirm("This will save the current order to history and start a new one. Are you sure?")) {
+        const now = new Date();
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+        const newOrder = {
+            orderId: now.getTime(),
+            dateTime: now.toISOString(),
+            totalPrice: total,
+            items: [...cart] // Create a copy
+        };
+
+        history.push(newOrder);
+        setLocalStorageItem(LS_KEYS.HISTORY, history);
+
         cart = [];
-        currentItem = null; 
+        currentItem = null;
         removeLocalStorageItem(LS_KEYS.CART);
         removeLocalStorageItem(LS_KEYS.CURRENT_ITEM);
-        loadCartPage();
-        showToast("Cart has been reset.", 'info');
+
+        showToast("Order Saved! Starting new order.", "success");
+        setTimeout(() => window.location.href = 'index.html', 1500);
     }
+}
+
+// --- HISTORY PAGE (history.html) ---
+function loadHistoryPage() {
+    const tableBody = document.getElementById('history-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+
+    if (history.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No order history found.</td></tr>';
+        return;
+    }
+
+    // Sort orders by most recent first
+    const sortedHistory = [...history].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+    sortedHistory.forEach(order => {
+        const { date, time } = formatDateTime(order.dateTime);
+        order.items.forEach(item => {
+            const row = document.createElement('tr');
+            
+            const toppingsString = item.toppings.join(', ');
+            const comboString = item.isCombo ? `<span class="combo-tag">Yes</span>` : 'No';
+
+            row.innerHTML = `
+                <td>${date}</td>
+                <td>${time}</td>
+                <td>${item.name}</td>
+                <td>${comboString}</td>
+                <td>${toppingsString || 'None'}</td>
+                <td>$${item.price.toFixed(2)}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+        // Optional: Add a separator row between orders
+        // const sepRow = document.createElement('tr');
+        // sepRow.innerHTML = `<td colspan="6" style="background-color:#e0e0e0; height:2px; padding:0;"></td>`;
+        // tableBody.appendChild(sepRow);
+    });
+}
+
+function clearHistory() {
+     if (confirm("Are you sure you want to PERMANENTLY delete all order history? This cannot be undone.")) {
+        history = [];
+        removeLocalStorageItem(LS_KEYS.HISTORY);
+        loadHistoryPage();
+        showToast("Order history cleared.", "info");
+     }
 }
