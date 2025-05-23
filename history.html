@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS - Order History</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Order History</h1>
+         <p style="text-align: center; font-size: 0.9em; color: #555; margin-top: -15px; margin-bottom: 20px;">
+            This history is stored in your browser. It shows individual items sorted by order time.
+        </p>
+        <div style="overflow-x:auto;"> <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Item</th>
+                        <th>Combo?</th>
+                        <th>Toppings</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <tr>
+                        <td colspan="6" style="text-align:center;">Loading history...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="cart-actions" style="margin-top: 25px;">
+             <button class="cart-button secondary" onclick="window.location.href='index.html'">Back to Menu</button>
+             <button class="cart-button danger" onclick="clearHistory()">Clear History</button>
+        </div>
+    </div>
+
+    <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+    <script src="script.js"></script>
+</body>
+</html>
