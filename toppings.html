@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS - Select Toppings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="container">
+        <div id="current-item-display" class="current-item-info"></div>
+        <h2>Add Combo (+$2.00)</h2>
+        <div class="topping-items" id="combo-container">
+             </div>
+        <h2>Choose Your Free Toppings</h2>
+        <div class="topping-items" id="topping-items-container">
+            </div>
+        <h2>Done with this item?</h2>
+        <div class="cart-actions">
+            <button class="action-button" onclick="orderMore()">Save & Order More</button>
+            <button class="action-button secondary" onclick="viewCart()">Save & View Cart</button>
+        </div>
+    </div>
+
+    <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+    <script src="script.js"></script>
+</body>
+</html>
