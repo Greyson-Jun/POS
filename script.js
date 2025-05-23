@@ -266,7 +266,7 @@ function loadCartPage() {
     const cartItemsList = document.getElementById('cart-items-list');
     const totalInfoDiv = document.getElementById('total-info');
     if (!cartItemsList || !totalInfoDiv) return;
-    cartItemsList.innerHTML = ''; 
+    cartItemsList.innerHTML = '';
     let totalAmount = 0;
 
     if (cart.length === 0) {
@@ -277,7 +277,8 @@ function loadCartPage() {
 
     cart.forEach(item => {
         const listItem = document.createElement('li');
-        const itemInfoDiv = document.createElement('div');
+        // ... (item-info div and its content remain the same as previous version) ...
+         const itemInfoDiv = document.createElement('div');
         itemInfoDiv.classList.add('item-info');
         const itemDetailsSpan = document.createElement('span');
         itemDetailsSpan.classList.add('item-details');
@@ -285,36 +286,42 @@ function loadCartPage() {
         itemInfoDiv.appendChild(itemDetailsSpan);
         const itemToppingsSpan = document.createElement('span');
         itemToppingsSpan.classList.add('item-toppings');
-        
         let toppingsHTML = '';
-        if (item.isCombo) {
-            toppingsHTML += '<span class="combo-tag">Combo</span>';
-        }
+        if (item.isCombo) { toppingsHTML += '<span class="combo-tag">Combo</span>'; }
         const otherToppings = item.toppings.join(', ');
-        if(otherToppings) {
-            toppingsHTML += (item.isCombo ? ' ' : '') + `Toppings: ${otherToppings}`;
-        } else if (!item.isCombo) {
-             toppingsHTML = 'No toppings';
-        }
-
+        if(otherToppings) { toppingsHTML += (item.isCombo ? ' ' : '') + `Toppings: ${otherToppings}`; } 
+        else if (!item.isCombo) { toppingsHTML = 'No toppings'; }
         itemToppingsSpan.innerHTML = toppingsHTML;
         itemInfoDiv.appendChild(itemToppingsSpan);
         listItem.appendChild(itemInfoDiv);
-        
+
+
+        // --- UPDATED ITEM ACTIONS ---
         const itemActionsDiv = document.createElement('div');
         itemActionsDiv.classList.add('item-actions');
+
+        const duplicateButton = document.createElement('button');
+        duplicateButton.innerHTML = '<i class="fa-solid fa-copy"></i>Dup';
+        duplicateButton.classList.add('duplicate-btn');
+        duplicateButton.setAttribute('aria-label', `Duplicate ${item.name}`);
+        duplicateButton.onclick = () => duplicateCartItem(item.id);
+        itemActionsDiv.appendChild(duplicateButton);
+
         const editButton = document.createElement('button');
-        editButton.textContent = 'Edit';
+        editButton.innerHTML = '<i class="fa-solid fa-pen-to-square"></i>Edit';
         editButton.classList.add('edit-btn');
         editButton.setAttribute('aria-label', `Edit ${item.name}`);
         editButton.onclick = () => editCartItem(item.id);
         itemActionsDiv.appendChild(editButton);
+
         const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
+        removeButton.innerHTML = '<i class="fa-solid fa-xmark"></i>Rem';
         removeButton.classList.add('remove-btn');
         removeButton.setAttribute('aria-label', `Remove ${item.name} from cart`);
         removeButton.onclick = () => removeItemFromCart(item.id, item.name);
         itemActionsDiv.appendChild(removeButton);
+        // --- END UPDATED ITEM ACTIONS ---
+
         listItem.appendChild(itemActionsDiv);
         cartItemsList.appendChild(listItem);
         totalAmount += item.price;
@@ -325,6 +332,54 @@ function loadCartPage() {
         <p>Total Amount Due: $${totalAmount.toFixed(2)}</p>
     `;
 }
+
+function duplicateCartItem(itemId) {
+    const itemToDuplicate = cart.find(item => item.id === itemId);
+    if (itemToDuplicate) {
+        const newItem = {
+            ...itemToDuplicate, // Copy all properties
+            id: Date.now() // Give it a NEW unique ID
+        };
+        cart.push(newItem);
+        setLocalStorageItem(LS_KEYS.CART, cart);
+        loadCartPage();
+        showToast(`${newItem.name} duplicated.`, 'info');
+    }
+}
+
+function printCart() {
+    const printContainer = document.getElementById('print-receipt');
+    const cartSummary = document.getElementById('cart-summary');
+    const totalInfo = document.getElementById('total-info');
+
+    if (!printContainer || !cartSummary || !totalInfo || cart.length === 0) {
+        showToast("Cart is empty, nothing to print.", "warning");
+        return;
+    }
+
+    let receiptHTML = `<h1>Order Receipt</h1>`;
+    receiptHTML += `<p class="timestamp">Printed: ${new Date().toLocaleString()}</p>`;
+    receiptHTML += `<ul>`;
+
+    cart.forEach(item => {
+        let toppingsHTML = '';
+        if (item.isCombo) { toppingsHTML += `<strong>Combo</strong>`; }
+        const otherToppings = item.toppings.join(', ');
+        if (otherToppings) { toppingsHTML += (item.isCombo ? ', ' : '') + `${otherToppings}`; }
+        
+        receiptHTML += `<li>
+            <span class="item-details">${item.name} - $${item.price.toFixed(2)}</span><br>
+            <span class="item-toppings">${toppingsHTML || 'No extras'}</span>
+        </li>`;
+    });
+
+    receiptHTML += `</ul>`;
+    receiptHTML += `<div id="total-info">${totalInfo.innerHTML}</div>`; // Use cart's total info
+
+    printContainer.innerHTML = receiptHTML;
+    window.print(); // Trigger browser print dialog
+}
+
 
 function editCartItem(itemId) { /* ... (same as previous version) ... */
     const itemToEdit = cart.find(item => item.id === itemId);
@@ -386,13 +441,25 @@ function loadHistoryPage() {
         return;
     }
 
-    // Sort orders by most recent first
     const sortedHistory = [...history].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
 
     sortedHistory.forEach(order => {
         const { date, time } = formatDateTime(order.dateTime);
+        
+        // Add Header Row for the Order
+        const headerRow = document.createElement('tr');
+        headerRow.classList.add('order-header');
+        headerRow.innerHTML = `<td colspan="6">
+            Order: #${order.orderId} --- 
+            Date: ${date}, ${time} --- 
+            Total: $${order.totalPrice.toFixed(2)}
+        </td>`;
+        tableBody.appendChild(headerRow);
+
+        // Add Item Rows for the Order
         order.items.forEach(item => {
             const row = document.createElement('tr');
+            row.classList.add('item-row'); // Add class for filtering
             
             const toppingsString = item.toppings.join(', ');
             const comboString = item.isCombo ? `<span class="combo-tag">Yes</span>` : 'No';
@@ -407,11 +474,59 @@ function loadHistoryPage() {
             `;
             tableBody.appendChild(row);
         });
-        // Optional: Add a separator row between orders
-        // const sepRow = document.createElement('tr');
-        // sepRow.innerHTML = `<td colspan="6" style="background-color:#e0e0e0; height:2px; padding:0;"></td>`;
-        // tableBody.appendChild(sepRow);
     });
+}
+
+function filterHistoryTable() {
+    const input = document.getElementById('history-search');
+    const filter = input.value.toUpperCase();
+    const tableBody = document.getElementById('history-table-body');
+    const rows = tableBody.getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        // Only filter item rows, always show header rows
+        if (row.classList.contains('item-row')) {
+            const cells = row.getElementsByTagName('td');
+            let found = false;
+            // Search in Item Name (index 2) and Toppings (index 4)
+            const itemCell = cells[2];
+            const toppingsCell = cells[4];
+            if (itemCell && toppingsCell) {
+                if (itemCell.textContent.toUpperCase().indexOf(filter) > -1 || 
+                    toppingsCell.textContent.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                }
+            }
+            row.style.display = found ? "" : "none";
+        } else if (row.classList.contains('order-header')) {
+            // Check if *any* item in this order matches, if so, show header
+            let nextRow = row.nextElementSibling;
+            let orderHasMatch = false;
+            while(nextRow && nextRow.classList.contains('item-row')) {
+                const itemCells = nextRow.getElementsByTagName('td');
+                if (itemCells[2] && itemCells[4]) {
+                    if (itemCells[2].textContent.toUpperCase().indexOf(filter) > -1 || 
+                        itemCells[4].textContent.toUpperCase().indexOf(filter) > -1) {
+                        orderHasMatch = true;
+                        break;
+                    }
+                }
+                nextRow = nextRow.nextElementSibling;
+            }
+             row.style.display = orderHasMatch ? "" : "none";
+             // If filter is empty, show all headers
+             if(filter === "") {
+                row.style.display = "";
+             }
+        }
+    }
+     // If filter is empty, ensure all item rows are shown
+    if (filter === "") {
+        for (let i = 0; i < rows.length; i++) {
+             rows[i].style.display = "";
+        }
+    }
 }
 
 function clearHistory() {
