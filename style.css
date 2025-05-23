@@ -17,7 +17,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     width: 95%;
-    max-width: 700px; /* Slightly wider for cart item actions */
+    max-width: 800px; /* Wider for history table */
     margin-bottom: 20px;
 }
 
@@ -25,6 +25,30 @@ h1, h2 {
     color: #1a237e; /* Dark blue */
     text-align: center;
     margin-bottom: 25px;
+}
+
+/* Nav Actions on Menu Page */
+.nav-actions {
+    position: fixed; /* Keep them accessible */
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
+    z-index: 500;
+}
+
+.nav-button {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.nav-button:hover {
+    background-color: #5a6268;
 }
 
 .menu-items, .topping-items, .cart-actions {
@@ -61,161 +85,87 @@ h1, h2 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
-.topping-item button.selected, .topping-item button[aria-pressed="true"] {
+/* Combo Button Style */
+.topping-item button.combo-btn {
+    background-color: #fbc02d; /* Yellow */
+    color: #333;
+}
+.topping-item button.combo-btn:hover { background-color: #f9a825; }
+.topping-item button.combo-btn[aria-pressed="true"] {
+    background-color: #ff6f00; /* Orange - Selected Combo */
+    color: white;
+}
+.topping-item button.combo-btn[aria-pressed="true"]:hover { background-color: #e65100; }
+
+.topping-item button.selected, .topping-item button[aria-pressed="true"]:not(.combo-btn) {
     background-color: #1e88e5; /* Blue for selected toppings */
     color: white;
 }
-.topping-item button.selected:hover, .topping-item button[aria-pressed="true"]:hover {
+.topping-item button.selected:hover, .topping-item button[aria-pressed="true"]:not(.combo-btn):hover {
     background-color: #1565c0; /* Darker Blue */
 }
 
 .cart-button.secondary { background-color: #546e7a; }
 .cart-button.secondary:hover { background-color: #455a64; }
-.cart-button.danger { background-color: #d32f2f; }
-.cart-button.danger:hover { background-color: #c62828; }
+.cart-button.success { background-color: #2e7d32; } /* Green for New Order */
+.cart-button.success:hover { background-color: #1b5e20; }
 
-#cart-summary {
-    margin-top: 20px;
-    border-top: 2px solid #e0e0e0;
-    padding-top: 20px;
-}
-
-#cart-items-list {
-    list-style: none;
-    padding: 0;
-}
-
-#cart-items-list li {
-    background-color: #f9f9fa;
-    border: 1px solid #e0e0e0;
-    padding: 12px 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-#cart-items-list li .item-info {
-    flex-grow: 1;
-}
-
-#cart-items-list li .item-details {
-    font-weight: 500;
-    display: block; /* Ensure it takes its own line if needed */
-}
-
-#cart-items-list li .item-toppings {
-    font-size: 0.9em;
-    color: #555;
-    flex-basis: 100%;
-    margin-top: 5px;
-}
-
-#cart-items-list li .item-actions {
-    margin-left: 10px;
-    display: flex;
-    gap: 8px;
-    margin-top: 8px; /* Add some space if actions wrap */
-    flex-basis: 100%; /* Allow actions to wrap on small screens */
-    justify-content: flex-end;
-}
-
-.item-actions button {
-    background: none;
-    border: 1px solid transparent;
-    padding: 5px 8px;
-    font-size: 0.85em;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-.item-actions button.edit-btn {
-    background-color: #ffc107; /* Amber */
-    color: #333;
-}
+#cart-summary { margin-top: 20px; border-top: 2px solid #e0e0e0; padding-top: 20px; }
+#cart-items-list { list-style: none; padding: 0; }
+#cart-items-list li { background-color: #f9f9fa; border: 1px solid #e0e0e0; padding: 12px 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+#cart-items-list li .item-info { flex-grow: 1; }
+#cart-items-list li .item-details { font-weight: 500; display: block; }
+#cart-items-list li .item-toppings { font-size: 0.9em; color: #555; flex-basis: 100%; margin-top: 5px; }
+#cart-items-list li .item-toppings .combo-tag { font-weight: bold; color: #ff6f00; margin-right: 5px; }
+#cart-items-list li .item-actions { margin-left: 10px; display: flex; gap: 8px; margin-top: 8px; flex-basis: 100%; justify-content: flex-end; }
+.item-actions button { background: none; border: 1px solid transparent; padding: 5px 8px; font-size: 0.85em; cursor: pointer; border-radius: 4px; transition: background-color 0.2s, border-color 0.2s; }
+.item-actions button.edit-btn { background-color: #ffc107; color: #333; }
 .item-actions button.edit-btn:hover { background-color: #ffa000; }
-
-.item-actions button.remove-btn {
-    background-color: #ef5350; /* Light Red */
-    color: white;
-}
+.item-actions button.remove-btn { background-color: #ef5350; color: white; }
 .item-actions button.remove-btn:hover { background-color: #e53935; }
-
-
-#total-info {
-    margin-top: 25px;
-    font-size: 1.25em;
-    font-weight: bold;
-    text-align: right;
-    color: #1a237e;
-}
+#total-info { margin-top: 25px; font-size: 1.25em; font-weight: bold; text-align: right; color: #1a237e; }
 #total-info p { margin: 8px 0; }
+.current-item-info { text-align: center; font-size: 1.2em; margin-bottom: 20px; color: #283593; font-weight: bold; padding: 10px; background-color: #e8eaf6; border-radius: 5px; }
 
-.current-item-info {
-    text-align: center;
-    font-size: 1.2em;
-    margin-bottom: 20px;
-    color: #283593;
-    font-weight: bold;
+/* History Table */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.history-table th, .history-table td {
+    border: 1px solid #ddd;
     padding: 10px;
+    text-align: left;
+    font-size: 0.9em;
+}
+.history-table th {
     background-color: #e8eaf6;
-    border-radius: 5px;
+    color: #1a237e;
+    font-weight: 600;
+}
+.history-table tbody tr:nth-child(even) {
+    background-color: #f9f9fa;
+}
+.history-table td .combo-tag {
+    font-weight: bold;
+    color: #ff6f00;
 }
 
 /* Toast Notifications */
-#toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    background-color: #333;
-    color: white;
-    padding: 12px 18px;
-    border-radius: 6px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    min-width: 250px;
-}
-.toast.show {
-    opacity: 1;
-    transform: translateY(0);
-}
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+.toast { background-color: #333; color: white; padding: 12px 18px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; min-width: 250px; }
+.toast.show { opacity: 1; transform: translateY(0); }
 .toast.success { background-color: #4CAF50; }
 .toast.error { background-color: #f44336; }
 .toast.info { background-color: #2196F3; }
 .toast.warning { background-color: #ff9800; }
-
-.toast-close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2em;
-    margin-left: 15px;
-    cursor: pointer;
-    padding: 0 5px;
-}
+.toast-close-btn { background: none; border: none; color: white; font-size: 1.2em; margin-left: 15px; cursor: pointer; padding: 0 5px; }
 
 @media (max-width: 700px) {
-    .menu-item, .topping-item {
-        flex-basis: 100%;
-    }
-    #cart-items-list li .item-actions {
-       justify-content: flex-start; /* Align buttons to start on new line */
-       margin-left: 0;
-    }
-    .container { padding: 20px 15px; }
-    h1 { font-size: 1.8em; }
+    .menu-item, .topping-item { flex-basis: 100%; }
+    #cart-items-list li .item-actions { justify-content: flex-start; margin-left: 0; }
+    .nav-actions { top: 5px; right: 5px; gap: 5px; }
+    .nav-button { padding: 8px 10px; font-size: 12px; }
+    .history-table th, .history-table td { font-size: 0.8em; padding: 6px; }
 }
