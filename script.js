@@ -185,21 +185,35 @@ function loadToppingsPage() {
 
 function toggleCombo(buttonElement) {
     if (!currentItem) return;
-    currentItem.isCombo = !currentItem.isCombo;
+
+    currentItem.isCombo = !currentItem.isCombo; // Toggle the combo status
+
     if (currentItem.isCombo) {
-        currentItem.price = currentItem.originalPrice + COMBO_PRICE;
-        showToast('Combo Added!', 'success');
+        // Applying combo
+        if (currentItem.name === "Hotdog" || currentItem.name === "Jumbo Dog") {
+            currentItem.price = (currentItem.originalPrice * 2) + COMBO_PRICE;
+            showToast('Special Combo Added!', 'success');
+        } else {
+            currentItem.price = currentItem.originalPrice + COMBO_PRICE;
+            showToast('Combo Added!', 'success');
+        }
     } else {
+        // Removing combo - always revert to original price
         currentItem.price = currentItem.originalPrice;
         showToast('Combo Removed.', 'info');
     }
+
     buttonElement.setAttribute('aria-pressed', currentItem.isCombo ? 'true' : 'false');
     setLocalStorageItem(LS_KEYS.CURRENT_ITEM, currentItem);
+    
     // Update display price
     const currentItemDisplay = document.getElementById('current-item-display');
     if (currentItemDisplay) {
         currentItemDisplay.textContent = `Customizing: ${currentItem.name} ($${currentItem.price.toFixed(2)})`;
     }
+     // Reload toppings to update button style (especially if called without element)
+     loadToppingsPage();
+}
 }
 
 function toggleTopping(toppingName, buttonElement) { /* ... (same as previous version) ... */
