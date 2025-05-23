@@ -17,8 +17,11 @@
         </div>
         <div class="cart-actions">
             <button class="cart-button" onclick="window.location.href='index.html'">+ Add More Items</button>
-            <button class="cart-button danger" onclick="resetCart()">Reset Entire Cart</button>
+            <button class="cart-button success" onclick="startNewOrder()">Save & Start New Order</button>
         </div>
+         <p style="text-align: center; font-size: 0.8em; color: #555; margin-top: 15px;">
+            Clicking 'Save & Start New Order' will finalize this order, add it to history (stored in your browser), and clear the cart.
+        </p>
     </div>
 
     <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
