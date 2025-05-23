@@ -1,10 +1,12 @@
 const MENU_ITEMS = {
+    "Soda": 1.50,
+    "Chips": 1.00,
     "Hotdog": 3.00,
     "Jumbo Dog": 6.00,
     "Chicago Dog": 5.50,
     "Chilly Dog": 4.00,
     "Italian Beef": 7.00,
-    "Polish Sausage": 7.00
+    "Polish Sausage": 7.00,
     "SteakCheese": 10.00
 };
 
